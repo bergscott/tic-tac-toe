@@ -5,6 +5,8 @@ class TicTacToe
 
     BLANK_LINE = "   |   |   "
     DIVIDING_LINE = "___|___|___"
+    LANES = [[0,1,2], [0,3,6], [0,4,8], [1,4,7], 
+             [2,4,6], [2,5,8], [3,4,5], [6,7,8]]
     
     def initialize
         @spaces = []
@@ -17,6 +19,7 @@ class TicTacToe
         render_bottom_row
     end
 
+    # FIXME
     def mark_space(player, n)
       if @spaces[n].owner.nil?
         @spaces[n].owner = player
@@ -27,6 +30,19 @@ class TicTacToe
 
     def space_open?(n)
       spaces[n].open?
+    end
+
+    def full?
+      spaces.none? {|space| space.open? }
+    end
+
+    def three_in_a_row?
+      LANES.any? do |lane|
+        lane.all? do |space_num| 
+          cur_space = spaces[space_num]
+          cur_space.filled? && cur_space.owner == spaces[lane.first].owner 
+        end
+      end
     end
 
     private
@@ -78,6 +94,10 @@ class TicTacToe
       owner.nil?
     end
 
+    def filled?
+      !self.open?
+    end
+
   end
 
   def initialize(player1, player2)
@@ -86,19 +106,26 @@ class TicTacToe
   end
 
   def play
+    reset_board
     loop do
       play_turn(:player1, "X")
       break if declare_victor?
       play_turn(:player2, "O")
       break if declare_victor?
     end
+    show_board
+    puts "Game over!"
   end
+
+  private
 
   def board
     @board ||= Board.new
   end
 
-  private
+  def reset_board
+    @board = Board.new
+  end
 
   def play_turn(player, symbol)
     show_board
@@ -112,7 +139,7 @@ class TicTacToe
 
   def get_move
     loop do
-      puts "Mark which space (enter '?' for help)"
+      puts "Mark which space? (enter '?' for help)"
       user = gets.chomp
       case user
       when "?"
@@ -149,7 +176,7 @@ class TicTacToe
   end
 
   def declare_victor?
-    false
+    board.three_in_a_row? || board.full?
   end
 
 end
