@@ -7,6 +7,7 @@ class TicTacToe
     DIVIDING_LINE = "___|___|___"
     LANES = [[0,1,2], [0,3,6], [0,4,8], [1,4,7], 
              [2,4,6], [2,5,8], [3,4,5], [6,7,8]]
+
     
     def initialize
         @spaces = []
@@ -36,14 +37,23 @@ class TicTacToe
       spaces.none? {|space| space.open? }
     end
 
-    def three_in_a_row?
-      LANES.any? do |lane|
-        lane.all? do |space_num| 
-          cur_space = spaces[space_num]
-          cur_space.filled? && cur_space.owner == spaces[lane.first].owner 
-        end
+    def any_three_in_a_row?
+      LANES.any? {|lane| three_in_a_row?(lane)}
+    end
+
+    def three_in_a_row?(lane)
+      lane.all? do |space_index| 
+        cur_space = spaces[space_index]
+        cur_space.filled? && cur_space.owner == spaces[lane.first].owner 
       end
     end
+
+    def winner
+      LANES.each do |lane|
+        return spaces[lane.first].owner if three_in_a_row?(lane)
+      end
+    end
+        
 
     private
 
@@ -69,6 +79,18 @@ class TicTacToe
     def render_bottom_row
         render_line(6, 7, 8)
         puts BLANK_LINE
+    end
+  end
+
+  class Lane
+    attr_reader :spaces
+
+    def initialize(s1, s2, s3)
+      @spaces = [s1, s2, s3]
+    end
+
+    def three_in_a_row?
+      spaces.all? {|space| space.filled? && space.owner == spaces.first.owner} 
     end
   end
 
@@ -115,6 +137,7 @@ class TicTacToe
     end
     show_board
     puts "Game over!"
+    declare_victor
   end
 
   private
@@ -176,7 +199,19 @@ class TicTacToe
   end
 
   def declare_victor?
-    board.three_in_a_row? || board.full?
+    board.any_three_in_a_row? || board.full?
+  end
+
+  def declare_victor
+    if board.any_three_in_a_row?
+      puts "#{get_winner} won!"
+    else
+      puts "Cat's game."
+    end
+  end
+
+  def get_winner
+    board.winner
   end
 
 end
