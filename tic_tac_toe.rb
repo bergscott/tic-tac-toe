@@ -1,17 +1,22 @@
 class TicTacToe
 
   class Board
-    attr_reader :spaces
+    attr_reader :spaces, :lanes
 
     BLANK_LINE = "   |   |   "
     DIVIDING_LINE = "___|___|___"
-    LANES = [[0,1,2], [0,3,6], [0,4,8], [1,4,7], 
-             [2,4,6], [2,5,8], [3,4,5], [6,7,8]]
+    LANES = [%i(TL TM TR), %i(TL ML BL), %i(TL MM BR), %i(TM MM BM),
+             %i(TR MM BL), %i(TR MR BR), %i(ML MM MR), %i(BL BM BR)]
+    SPACE_NAMES = %i(TL TM TR ML MM MR BL BM BR)
 
     
     def initialize
-        @spaces = []
-        9.times {@spaces << new_space}
+        @spaces = {}
+        SPACE_NAMES.each {|name| spaces[name] = new_space}
+        @lanes = []
+        LANES.each do |lane_members|
+          lanes << Lane.new(lane_members.map {|space_name| spaces[space_name]})
+        end
     end
 
     def render
@@ -22,8 +27,8 @@ class TicTacToe
 
     # FIXME
     def mark_space(player, n)
-      if @spaces[n].owner.nil?
-        @spaces[n].owner = player
+      if spaces[n].open?
+        spaces[n].owner = player
       else
         raise ArgumentError, "space is already claimed"
       end
@@ -34,26 +39,20 @@ class TicTacToe
     end
 
     def full?
-      spaces.none? {|space| space.open? }
+      spaces.values.none? {|space| space.open? }
     end
 
     def any_three_in_a_row?
-      LANES.any? {|lane| three_in_a_row?(lane)}
-    end
-
-    def three_in_a_row?(lane)
-      lane.all? do |space_index| 
-        cur_space = spaces[space_index]
-        cur_space.filled? && cur_space.owner == spaces[lane.first].owner 
-      end
+      lanes.any? {|lane| lane.three_in_a_row?}
     end
 
     def winner
-      LANES.each do |lane|
-        return spaces[lane.first].owner if three_in_a_row?(lane)
+      lanes.each do |lane|
+        winning_player = lane.winner
+        return winning_player if winning_player
       end
+      nil
     end
-        
 
     private
 
@@ -63,21 +62,21 @@ class TicTacToe
         
     def render_line(left, center, right)
         puts BLANK_LINE
-        puts "#{@spaces[left]}|#{@spaces[center]}|#{@spaces[right]}"
+        puts "#{spaces[left]}|#{spaces[center]}|#{spaces[right]}"
     end
 
     def render_top_row
-        render_line(0, 1 , 2)
+        render_line(:TL, :TM , :TR)
         puts DIVIDING_LINE
     end
 
     def render_middle_row
-        render_line(3, 4, 5)
+        render_line(:ML, :MM, :MR)
         puts DIVIDING_LINE
     end
 
     def render_bottom_row
-        render_line(6, 7, 8)
+        render_line(:BL, :BM, :BR)
         puts BLANK_LINE
     end
   end
@@ -85,13 +84,18 @@ class TicTacToe
   class Lane
     attr_reader :spaces
 
-    def initialize(s1, s2, s3)
-      @spaces = [s1, s2, s3]
+    def initialize(list_of_spaces)
+      @spaces = list_of_spaces
     end
 
     def three_in_a_row?
       spaces.all? {|space| space.filled? && space.owner == spaces.first.owner} 
     end
+
+    def winner
+      three_in_a_row? ? spaces.first.owner : nil
+    end
+
   end
 
   class Space
@@ -102,7 +106,7 @@ class TicTacToe
     end
 
     def to_s
-      case @owner
+      case owner
       when :player1
         " X "
       when :player2
@@ -164,11 +168,12 @@ class TicTacToe
     loop do
       puts "Mark which space? (enter '?' for help)"
       user = gets.chomp
-      case user
+      case user.upcase
       when "?"
+        show_board
         show_choices
-      when /^[0-8]$/
-        return user.to_i if valid_move?(user.to_i)
+      when /^[TMB][LMR]$/
+        return user.to_sym if valid_move?(user.to_sym)
         puts "Space is already taken. Try again!"
       else
         puts "Invalid input, try again!"
@@ -185,17 +190,16 @@ class TicTacToe
   end
 
   def show_choices
-    show_board
-    puts "Select a space by entering the corresponding number: "
-    puts "0. Top Left"
-    puts "1. Top Middle"
-    puts "2. Top Right"
-    puts "3. Middle Left"
-    puts "4. Center"
-    puts "5. Middle Right"
-    puts "6. Bottom Left"
-    puts "7. Bottom Middle"
-    puts "8. Bottom Right"
+    puts "Select a space by entering the corresponding letters: "
+    puts "TL - Top Left"
+    puts "TM - Top Middle"
+    puts "TR - Top Right"
+    puts "ML - Middle Left"
+    puts "MM - Center (Middle Middle)"
+    puts "MR - Middle Right"
+    puts "BL - Bottom Left"
+    puts "BM - Bottom Middle"
+    puts "BR - Bottom Right"
   end
 
   def declare_victor?
