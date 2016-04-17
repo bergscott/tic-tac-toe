@@ -144,16 +144,27 @@ class TicTacToe
 
   end
 
+  attr_reader :player1, :player2
+
   def self.play
     player1 = Player.new_request_name(1)
     player2 = Player.new_request_name(2)
     game = self.new(player1, player2)
-    game.play_game(player1, player2)
+    game.play_games
   end
 
   def initialize(player1, player2)
     @player1 = player1
     @player2 = player2
+  end
+
+  def play_games
+    loop do
+      play_game(player1, player2)
+      break if stop_playing?
+      play_game(player2, player1)
+      break if stop_playing?
+    end
   end
 
   def play_game(p1, p2)
@@ -184,6 +195,21 @@ class TicTacToe
     puts "#{player}'s (#{symbol}'s) turn!"
     mark_space(symbol, get_move)
   end
+
+  def stop_playing?
+    loop do
+      puts "Play another game (Y/N)?"
+      user = gets.chomp
+      case user.upcase
+      when "Y", "YES"
+        return false
+      when "N", "NO"
+        return true
+      else
+        puts invalid_input
+      end
+    end
+  end
   
   def show_board
     board.render
@@ -201,7 +227,7 @@ class TicTacToe
         return user.to_sym if valid_move?(user.to_sym)
         puts "Space is already taken. Try again!"
       else
-        puts "Invalid input, try again!"
+        puts invalid_input
       end
     end
   end
@@ -243,4 +269,8 @@ class TicTacToe
     board.winner
   end
 
+  def invalid_input
+    "Invalid input, try again!"
+  end
+  
 end
