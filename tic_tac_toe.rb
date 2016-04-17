@@ -8,7 +8,6 @@ class TicTacToe
     LANES = [%i(TL TM TR), %i(TL ML BL), %i(TL MM BR), %i(TM MM BM),
              %i(TR MM BL), %i(TR MR BR), %i(ML MM MR), %i(BL BM BR)]
     SPACE_NAMES = %i(TL TM TR ML MM MR BL BM BR)
-
     
     def initialize
         @spaces = {}
@@ -89,7 +88,7 @@ class TicTacToe
     end
 
     def three_in_a_row?
-      spaces.all? {|space| space.filled? && space.owner == spaces.first.owner} 
+      spaces.all? {|space| space.filled? && space.owner == spaces.first.owner}
     end
 
     def winner
@@ -107,9 +106,9 @@ class TicTacToe
 
     def to_s
       case owner
-      when :player1
+      when "X"
         " X "
-      when :player2
+      when "O"
         " O "
       else
         "   "
@@ -126,17 +125,43 @@ class TicTacToe
 
   end
 
+  class Player
+    attr_reader :wins, :name
+
+    def self.new_request_name(player_number)
+      puts "Enter player #{player_number}'s name:"
+      Player.new(gets.chomp)
+    end
+
+    def initialize(name)
+      @name = name
+      @wins = 0
+    end
+
+    def to_s
+      name
+    end
+
+  end
+
+  def self.play
+    player1 = Player.new_request_name(1)
+    player2 = Player.new_request_name(2)
+    game = self.new(player1, player2)
+    game.play_game(player1, player2)
+  end
+
   def initialize(player1, player2)
     @player1 = player1
     @player2 = player2
   end
 
-  def play
+  def play_game(p1, p2)
     reset_board
     loop do
-      play_turn(:player1, "X")
+      play_turn(p1, "X")
       break if declare_victor?
-      play_turn(:player2, "O")
+      play_turn(p2, "O")
       break if declare_victor?
     end
     show_board
@@ -157,7 +182,7 @@ class TicTacToe
   def play_turn(player, symbol)
     show_board
     puts "#{player}'s (#{symbol}'s) turn!"
-    mark_space(player, get_move)
+    mark_space(symbol, get_move)
   end
   
   def show_board
