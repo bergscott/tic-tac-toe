@@ -105,13 +105,10 @@ class TicTacToe
     end
 
     def to_s
-      case owner
-      when "X"
-        " X "
-      when "O"
-        " O "
-      else
+      if owner.nil?
         "   "
+      else
+        " #{owner.symbol} "
       end
     end
 
@@ -126,16 +123,17 @@ class TicTacToe
   end
 
   class Player
-    attr_reader :wins, :name
+    attr_reader :wins, :name, :symbol
 
-    def self.new_request_name(player_number)
-      puts "Enter player #{player_number}'s name:"
-      Player.new(gets.chomp)
+    def self.new_request_name(symbol)
+      puts "Enter player #{symbol}'s name:"
+      Player.new(gets.chomp, symbol)
     end
 
-    def initialize(name)
+    def initialize(name, symbol)
       @name = name
       @wins = 0
+      @symbol = symbol
     end
 
     def to_s
@@ -147,8 +145,8 @@ class TicTacToe
   attr_reader :player1, :player2
 
   def self.play
-    player1 = Player.new_request_name(1)
-    player2 = Player.new_request_name(2)
+    player1 = Player.new_request_name("X")
+    player2 = Player.new_request_name("O")
     game = self.new(player1, player2)
     game.play_games
   end
@@ -170,9 +168,9 @@ class TicTacToe
   def play_game(p1, p2)
     reset_board
     loop do
-      play_turn(p1, "X")
+      play_turn(p1)
       break if declare_victor?
-      play_turn(p2, "O")
+      play_turn(p2)
       break if declare_victor?
     end
     show_board
@@ -190,10 +188,10 @@ class TicTacToe
     @board = Board.new
   end
 
-  def play_turn(player, symbol)
+  def play_turn(player)
     show_board
-    puts "#{player}'s (#{symbol}'s) turn!"
-    mark_space(symbol, get_move)
+    puts "#{player}'s (#{player.symbol}'s) turn!"
+    mark_space(player, get_move)
   end
 
   def stop_playing?
