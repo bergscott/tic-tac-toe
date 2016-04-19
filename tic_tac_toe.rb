@@ -24,9 +24,8 @@ class TicTacToe
         render_bottom_row
     end
 
-    # FIXME
     def mark_space(player, n)
-      if spaces[n].open?
+      if space_open?(n)
         spaces[n].owner = player
       else
         raise ArgumentError, "space is already claimed"
@@ -151,8 +150,12 @@ class TicTacToe
   def self.play
     player1 = Player.new_request_name("X")
     player2 = Player.new_request_name("O")
-    game = self.new(player1, player2)
+    game = flip_start? ? self.new(player1, player2) : self.new(player2, player1)
     game.play_games
+  end
+
+  def self.flip_start?
+    rand(2) > 0
   end
 
   def initialize(player1, player2)
