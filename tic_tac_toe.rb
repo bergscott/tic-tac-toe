@@ -136,13 +136,17 @@ class TicTacToe
       @symbol = symbol
     end
 
+    def add_win
+      @wins += 1
+    end
+
     def to_s
       name
     end
 
   end
 
-  attr_reader :player1, :player2
+  attr_reader :player1, :player2, :cats_games
 
   def self.play
     player1 = Player.new_request_name("X")
@@ -154,6 +158,7 @@ class TicTacToe
   def initialize(player1, player2)
     @player1 = player1
     @player2 = player2
+    @cats_games = 0
   end
 
   def play_games
@@ -163,6 +168,9 @@ class TicTacToe
       play_game(player2, player1)
       break if stop_playing?
     end
+    puts "Final stats:"
+    show_stats
+    puts "Goodbye!"
   end
 
   def play_game(p1, p2)
@@ -175,7 +183,8 @@ class TicTacToe
     end
     show_board
     puts "Game over!"
-    declare_victor
+    victor = declare_victor
+    log_victor(victor)
   end
 
   private
@@ -196,13 +205,15 @@ class TicTacToe
 
   def stop_playing?
     loop do
-      puts "Play another game (Y/N)?"
+      puts "Play another game (Y/N)? (type 'stats' to see statistics)"
       user = gets.chomp
       case user.upcase
       when "Y", "YES"
         return false
       when "N", "NO"
         return true
+      when "STATS"
+        show_stats
       else
         puts invalid_input
       end
@@ -257,14 +268,31 @@ class TicTacToe
 
   def declare_victor
     if board.any_three_in_a_row?
-      puts "#{get_winner} won!"
+      winner = get_winner
+      puts "#{winner} won!"
+      winner
     else
       puts "Cat's game."
+      nil
     end
   end
 
   def get_winner
     board.winner
+  end
+  
+  def log_victor(victor)
+    victor ? victor.add_win : increment_cats
+  end
+
+  def increment_cats
+    @cats_games += 1
+  end
+
+  def show_stats
+    puts "#{player1} wins: #{player1.wins}"
+    puts "#{player2} wins: #{player2.wins}"
+    puts "Cat's games: #{cats_games}"
   end
 
   def invalid_input
